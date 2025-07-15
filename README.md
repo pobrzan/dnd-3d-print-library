@@ -80,6 +80,9 @@ If you are the creator or contributor and would like additional credit or remova
 
 NOTE: Shapeway links were filtered out of the data set due to them no longer being valid.
 
+### Support the Artist
+[https://www.patreon.com/cw/mz4250](https://www.patreon.com/cw/mz4250)
+
 ---
 
 ## License
