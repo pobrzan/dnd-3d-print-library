@@ -16,6 +16,9 @@ export interface StlMonsterInfo {
 let apiMonsterListCache: ApiMonsterListItem[] = [];
 let stlMonsterMapCache: Map<string, StlMonsterInfo> | null = null;
 
+const MONSTERS_JSON_VERSION = "v1"; // Increment this if you update monsters.json
+const MONSTERS_JSON_LS_KEY = `stlMonstersJson_${MONSTERS_JSON_VERSION}`;
+
 export async function getApiMonsterList(): Promise<ApiMonsterListItem[]> {
   if (apiMonsterListCache.length > 0) return apiMonsterListCache;
   const res = await fetch('https://www.dnd5eapi.co/api/2014/monsters');
@@ -27,10 +30,33 @@ export async function getApiMonsterList(): Promise<ApiMonsterListItem[]> {
 
 export async function getStlMonsterMap(): Promise<Map<string, StlMonsterInfo>> {
   if (stlMonsterMapCache) return stlMonsterMapCache;
+
+  // Try localStorage first
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem(MONSTERS_JSON_LS_KEY);
+      if (cached) {
+        const data: StlMonsterInfo[] = JSON.parse(cached);
+        stlMonsterMapCache = new Map(data.map(m => [m.Name.toLowerCase(), m]));
+        return stlMonsterMapCache;
+      }
+    } catch {
+      // Ignore parse errors, fallback to network
+    }
+  }
+
+  // Fallback: fetch from network
   const res = await fetch('/monsters.json');
   if (!res.ok) throw new Error('Failed to fetch STL monster list');
   const data: StlMonsterInfo[] = await res.json();
-  // Map by lowercased name for easy lookup
+  // Save to localStorage for future loads
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(MONSTERS_JSON_LS_KEY, JSON.stringify(data));
+    } catch {
+      // Ignore quota errors
+    }
+  }
   stlMonsterMapCache = new Map(data.map(m => [m.Name.toLowerCase(), m]));
   return stlMonsterMapCache;
 }
